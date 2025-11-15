@@ -7,10 +7,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      ANDROIDSDK: $HOME/.buildozer/android/platform/android-sdk
-      ANDROIDNDK: $HOME/.buildozer/android/platform/android-ndk
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,27 +17,9 @@ jobs:
           sudo apt-get install -y python3-pip git zip openjdk-17-jdk
           sudo pip3 install buildozer cython
 
-      - name: Prepare Android SDK build-tools
-        run: |
-          # Make sure buildozer is initialized and SDK is downloaded
-          buildozer init || true
-          buildozer android debug || true
-
-          # Use the SDK that buildozer downloaded
-          export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
-
-          # Try old tools path
-          if [ -x "$ANDROID_HOME/tools/bin/sdkmanager" ]; then
-            yes | "$ANDROID_HOME/tools/bin/sdkmanager" "platform-tools" "platforms;android-33" "build-tools;33.0.2"
-          # Try cmdline-tools path (newer layout)
-          elif [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
-            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-33" "build-tools;33.0.2"
-          else
-            echo "sdkmanager not found in expected locations"
-          fi
-
       - name: Build APK
         run: |
+          buildozer init || true
           buildozer android debug
 
       - name: Upload APK
