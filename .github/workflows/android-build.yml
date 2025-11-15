@@ -2,55 +2,28 @@ name: Build Kivy APK (Buildozer)
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
-  build-apk:
+  build:
     runs-on: ubuntu-latest
-    env:
-      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install system packages
+      - name: Install system dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip python3-venv build-essential wget
+          sudo apt update
+          sudo apt install -y buildozer python3-pip git zip openjdk-17-jdk
+          pip3 install --upgrade buildozer cython
 
-      - name: Setup Python virtualenv
+      - name: Build APK
         run: |
-          python3 -m venv .venv
-          source .venv/bin/activate
-          pip install --upgrade pip setuptools wheel
+          buildozer init || true
+          buildozer android debug
 
-      - name: Install buildozer & python-for-android
-        run: |
-          source .venv/bin/activate
-          pip install --upgrade git+https://github.com/kivy/python-for-android.git@master
-          pip install --upgrade git+https://github.com/kivy/buildozer.git@master
-
-      - name: Ensure project files exist
-        run: |
-          echo "Project root:"
-          ls -la
-
-      - name: Run buildozer to create debug APK
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        run: |
-          source .venv/bin/activate
-          python -m buildozer -v android debug || true
-        timeout-minutes: 120
-
-      - name: Upload APK artifact
-        if: always()
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: apk-artifacts
-          path: |
-            bin/*.apk
-            ./.buildozer/android/platform/build-*/dists/**/bin/*.apk
+          name: sms-reader-app
+          path: bin/*.apk
