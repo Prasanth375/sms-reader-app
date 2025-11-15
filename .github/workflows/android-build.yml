@@ -1,9 +1,10 @@
-                    name: Build Kivy APK (Buildozer)
+name: Build Kivy APK (Buildozer)
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   build-apk:
@@ -12,49 +13,44 @@ jobs:
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Install system packages
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip python3-venv build-essential wget
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip python3-venv build-essential wget
 
-    - name: Setup Python virtualenv
-      run: |
-        python3 -m venv .venv
-        source .venv/bin/activate
-        pip install --upgrade pip setuptools wheel
+      - name: Setup Python virtualenv
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip setuptools wheel
 
-    - name: Install buildozer & python-for-android from Git
-      run: |
-        source .venv/bin/activate
-        pip install --upgrade git+https://github.com/kivy/python-for-android.git@master
-        pip install --upgrade git+https://github.com/kivy/buildozer.git@master
-        buildozer --version || python -m buildozer --version
+      - name: Install buildozer & python-for-android
+        run: |
+          source .venv/bin/activate
+          pip install --upgrade git+https://github.com/kivy/python-for-android.git@master
+          pip install --upgrade git+https://github.com/kivy/buildozer.git@master
 
-    - name: Ensure project files exist
-      run: |
-        echo "Project root:"
-        ls -la
+      - name: Ensure project files exist
+        run: |
+          echo "Project root:"
+          ls -la
 
-    - name: Run buildozer to create debug APK
-      env:
-        DEBIAN_FRONTEND: noninteractive
-      run: |
-        source .venv/bin/activate
-        if [ ! -f buildozer.spec ]; then
-          echo "ERROR: buildozer.spec not found in repo root" >&2
-          exit 1
-        fi
-        python -m buildozer -v android debug || true
-      timeout-minutes: 120
+      - name: Run buildozer to create debug APK
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          source .venv/bin/activate
+          python -m buildozer -v android debug || true
+        timeout-minutes: 120
 
-    - name: Upload APK artifact
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: apk-artifacts
-        path: |
-          bin/*.apk
-          ./.buildozer/android/platform/build-*/dists/**/bin/*.apk
+      - name: Upload APK artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-artifacts
+          path: |
+            bin/*.apk
+            ./.buildozer/android/platform/build-*/dists/**/bin/*.apk
