@@ -11,15 +11,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install system dependencies
+      - name: Install system dependencies and Buildozer
         run: |
           sudo apt-get update
           sudo apt-get install -y python3-pip git zip openjdk-17-jdk
-
-      - name: Install buildozer and Python deps
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install --upgrade buildozer cython
+          sudo pip3 install --upgrade pip
+          sudo pip3 install --upgrade buildozer cython
 
       - name: Build APK
         run: |
@@ -31,4 +28,3 @@ jobs:
         with:
           name: sms-reader-app
           path: bin/*.apk
-    
